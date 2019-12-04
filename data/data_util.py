@@ -20,8 +20,10 @@ def getDocAsWordArray(filename):
     apiData = np.array(apiList).tolist()
 
     dic = {}
+    name_list = []
     for dataItem in apiData:
         name = dataItem[0]
+        name_list.append(name)
         document = dataItem[1]
         dic[name] = document
 
@@ -45,15 +47,22 @@ def getFormerCategory(filename):
     c_type = set()
     former = []
     for dataItem in apiData:
-        c_type.add(dataItem[0])
+        c_type.add(dataItem[0].strip())
     c_type = list(c_type)
+    print(c_type)
     for dataItem in apiData:
-        former.append(c_type.index(dataItem[0]))
+        former.append(c_type.index(dataItem[0].strip()))
 
     return former
 
 
 if __name__ == "__main__":
-    file_name = "test.csv"
+    file_name = "原始text5.csv"
     dictionary = getDocAsWordArray(file_name)
-    print(dictionary)
+    cate = getFormerCategory(file_name)
+    print(len(cate))
+    print(len(set(cate)))
+    print(set(cate))
+    print(len(dictionary))
+    # for k in dictionary:
+    # print("{}: {}".format(k, dictionary[k]))
