@@ -1,6 +1,7 @@
 import model.TF_IDFAdapter as tfidf
 import model.word2vecAdapter as w2v
 import cluster.kmeans as kmn
+import numpy as np
 """
 利用tf_idf来对经过word2vec训练后产生的词向量加工
 获取文档的对应向量
@@ -20,18 +21,25 @@ def clusterResult(doc={}, num=3, save_path=r"E:\学校\快乐推荐\word2vec\sav
     doc_vec = []
     t = 0
     for doc_weight in weight:
-        # print("turn", t)
+        print("turn", t)
         t += 1
         doc_vec_list = []
         for i in range(len(doc_weight)):
             mul = doc_weight[i]
             doc_vec_list.append([x * mul for x in vec_list[i]])
-        simple_vec = []
+
+        simple_vec = np.array([0.0] * len(doc_vec_list[0]))
+        for vec in doc_vec_list:
+            # 使用np进行矩阵相加
+            simple_vec += np.array(vec)
+        simple_vec = list(simple_vec)
+        """
         for i in range(len(doc_vec_list[0])):
             vec_sum = 0
             for vec in doc_vec_list:
                 vec_sum += vec[i]
             simple_vec.append(vec_sum)
+        """
         doc_vec.append(simple_vec)
 
     if result_save:
