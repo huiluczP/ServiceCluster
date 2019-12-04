@@ -249,7 +249,7 @@ def precision_cluster(k, result=[], former=[]):
         index_max = 0
         for j in range(k):
             if used[j] != 1:
-                if sm_m[i][j] > s_max:
+                if sm_m[i][j] >= s_max:
                     s_max = sm_m[i][j]
                     index_max = j
         used[index_max] = 1
@@ -300,7 +300,7 @@ def recall_cluster(k, result=[], former=[]):
         index_max = 0
         for j in range(k):
             if used[j] != 1:
-                if sm_m[i][j] > s_max:
+                if sm_m[i][j] >= s_max:
                     s_max = sm_m[i][j]
                     index_max = j
         used[index_max] = 1
@@ -313,6 +313,11 @@ def recall_cluster(k, result=[], former=[]):
         r += right
     r = r / k
     return r
+
+
+def f1measure_cbq(p, r):
+    # 直接由之前求出的准确率和召回率计算f1值
+    return 2 * p * r / (p + r)
 
 
 if __name__ == "__main__":
