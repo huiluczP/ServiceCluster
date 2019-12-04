@@ -3,6 +3,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
+from gensim import corpora as corp
 
 """
 文档预处理
@@ -56,9 +57,40 @@ def get_doc_after_divide(doc):
     # 获取完整处理后的语料信息，返回为dictionary
     # doc为为文档字典，未分词
     dic = {}
+    word_list = []
+    whole_dic = []
+    # 先进行第一步分词
     for k in doc:
         document = doc[k]
         words = divide(document)
-        doc_word = " ".join(words)
-        dic[k] = doc_word
+        word_list.append(words)
+        whole_dic += words
+
+    # 计算词频，建立低词频list
+    low_word = cal_low_fre_word(whole_dic)
+
+    # 去除
+    t = 0
+    for k in doc:
+        words = word_list[t]
+        document = ""
+        for w in words:
+            if w not in low_word:
+                document += w
+                document += " "
+        document = document[0:len(document)-1]
+        dic[k] = document
+        t += 1
+
     return dic
+
+
+def cal_low_fre_word(word_list, num=5):
+    # 计算语料中低频词并去除,默认为出现3次以下
+    # word_list为语料主干化分词后的结果
+    low_word = []
+    word_set = set(word_list)
+    for word in word_set:
+        if word_list.count(word) < num:
+            low_word.append(word)
+    return low_word
