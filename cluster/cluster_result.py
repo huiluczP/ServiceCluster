@@ -8,22 +8,24 @@ import cluster.tf_idf_lda_kmeans as lda_ti
 import cluster.tf_idf_lda_expand_kmeans as lda_ex_ti
 import cluster.tf_idf_w2v_kmeans as w2v_ti
 import cluster.btm_kmeans as btm_kmn
+import cluster.gpu_dmm_kmeans as gd_kmn
 
 
 def printResult(k, result, former):
     pur = ce.purityClusterResult(k, result, former)
     ri = ce.R1ClusterResult(k, result, former)
-    f1 = ce.f1measureClusterResult(k, result, former)
+    # f1 = ce.f1measureClusterResult(k, result, former)
     en = ce.entropyClusterResult(k, result, former)
     pre = ce.precision_cluster(k, result, former)
     recall = ce.recall_cluster(k, result, former)
+    f1 = ce.f1measure_cbq(pre, recall)
 
-    print("纯度:{}, RI:{}, F1_measure:{}, 熵：{}, 准确率：{}， 召回率：{}".format(pur, ri, f1, en, pre, recall))
+    print("纯度:{}, RI:{}, 熵：{}, 准确率：{}，召回率：{}, F1_measure:{}".format(pur, ri, en, pre, recall, f1))
     result_list = [pur, ri, f1, en, pre, recall]
     return result_list
 
 
-def ldaCluster(k1, k2, filename):
+def ldaCluster(k1, k2, filename, fre_num=5):
     """
     包含三个参数
     k1为lda模型主题数，k2为聚类数，filename为resource中csv文件
@@ -33,7 +35,7 @@ def ldaCluster(k1, k2, filename):
 
     # 获取数据
     print("开始获取数据")
-    doc = du.getDocAsWordArray(filename)
+    doc = du.getDocAsWordArray(filename, fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
@@ -47,7 +49,7 @@ def ldaCluster(k1, k2, filename):
     return result, result_list
 
 
-def tf_idf_ldaCluster(k1, k2, filename, num):
+def tf_idf_ldaCluster(k1, k2, filename, num, fre_num=5):
     """
     包含四个参数
     k1为lda模型主题数，k2为聚类数，filename为resource中csv文件, num为关键词数量
@@ -57,7 +59,7 @@ def tf_idf_ldaCluster(k1, k2, filename, num):
 
     # 获取数据
     print("开始获取数据")
-    doc = du.getDocAsWordArray(filename)
+    doc = du.getDocAsWordArray(filename,fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
@@ -65,14 +67,14 @@ def tf_idf_ldaCluster(k1, k2, filename, num):
     lda_ti.k1 = k1
     lda_ti.k2 = k2
 
-    print("lda主题数:{}, 聚类个数:{}".format(ldakmn.k1, ldakmn.k2))
+    print("lda主题数:{}, 聚类个数:{}".format(lda_ti.k1, lda_ti.k2))
     result = lda_ti.clusterResult(doc, num)
 
     result_list = printResult(lda_ti.k2, result, former)
     return result, result_list
 
 
-def tf_idf_expand_lda(k1, k2, filename, num, sim_num):
+def tf_idf_expand_lda(k1, k2, filename, num, sim_num, fre_num=5):
     """
     包含五个参数
     k1为lda模型主题数，k2为聚类数，filename为resource中csv文件，num为keyword数，sim_num为扩容数
@@ -83,21 +85,21 @@ def tf_idf_expand_lda(k1, k2, filename, num, sim_num):
 
     # 获取数据
     print("开始获取数据")
-    doc = du.getDocAsWordArray(filename)
+    doc = du.getDocAsWordArray(filename, fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
     # k1主题分类数 k2聚类数量
     lda_ex_ti.k1 = k1
     lda_ex_ti.k2 = k2
-    print("lda主题数:{}, 聚类个数:{}".format(ldakmn.k1, ldakmn.k2))
+    print("lda主题数:{}, 聚类个数:{}".format(lda_ex_ti.k1, lda_ex_ti.k2))
     result = lda_ex_ti.clusterResult(doc, num, sim_num)
 
     result_list = printResult(lda_ex_ti.k2, result, former)
     return result, result_list
 
 
-def tf_idf_w2vCluster(k, filename, use_file=False, save_path=r"E:\学校\快乐推荐\word2vec\saveVec"):
+def tf_idf_w2vCluster(k, filename, use_file=False, save_path=r"E:\学校\快乐推荐\word2vec\saveVec", fre_num=5):
     """
     包含四个参数
     k为聚类数，filename为resource中csv文件，use_file为是否使用存储文件
@@ -107,7 +109,7 @@ def tf_idf_w2vCluster(k, filename, use_file=False, save_path=r"E:\学校\快乐�
     print("tf_idf预处理, w2v训练，kMeans聚类")
 
     # 获取数据
-    doc = du.getDocAsWordArray(filename)
+    doc = du.getDocAsWordArray(filename, fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
@@ -121,16 +123,16 @@ def tf_idf_w2vCluster(k, filename, use_file=False, save_path=r"E:\学校\快乐�
     return result, result_list
 
 
-def btmCluster(k, filename, save_file):
+def btmCluster(k, filename, save_file, fre_num=5):
     """
-    包含二个参数
+    包含三个参数
     k为聚类数，filename为resource中csv文件
     btm比较特殊，model构建较慢，提前进行model创建并使用文件进行读取
     """
     print("BTM模型，KMeans聚类")
 
     # 获取数据
-    doc = du.getDocAsWordArray(filename)
+    doc = du.getDocAsWordArray(filename, fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
@@ -140,13 +142,32 @@ def btmCluster(k, filename, save_file):
     return result, result_list
 
 
-if __name__ == "__main__":
-    topic = 5
-    kkt = 3
-    file_name = "test.csv"
-    label = ["lda", "tf_idf_keyword_lda", "tf_idf_expand_lda", "w2v_text8", "w2v_api", "btm"]
+def gpu_dmmCluster(k, filename, save_file, fre_num=5):
+    """
+    包含三个参数
+    k为聚类数，filename为resource中csv文件
+    save_file为存储文档_主题分布的文件
+    """
+    print("gpu_dmm模型，KMeans聚类")
 
-    model_file = "btm_result.txt"  # btm结果文件
+    # 获取数据
+    doc = du.getDocAsWordArray(filename, fre_num)
+    # 获取标签信息
+    former = du.getFormerCategory(filename)
+
+    # 直接计算太慢，直接将处理好的model文件拿来用
+    result = gd_kmn.clusterResult(k, save_file)
+    result_list = printResult(k, result, former)
+    return result, result_list
+
+
+if __name__ == "__main__":
+    topic = 10
+    kkt = 10
+    file_name = "原始text5.csv"
+    label = ["lda", "tf_idf_keyword_lda", "tf_idf_expand_lda", "w2v_text8", "w2v_api", "btm"]
+    under_label = ["purity", "RI", "entropy", "precision", "recall", "F1"]
+    model_file = "btm_result_text5.txt"  # btm结果文件
 
     cluster_result1, result1 = ldaCluster(topic, kkt, file_name)
     cluster_result2, result2 = tf_idf_ldaCluster(topic, kkt, file_name, 5)
@@ -154,6 +175,7 @@ if __name__ == "__main__":
     cluster_result4, result4 = tf_idf_w2vCluster(kkt, file_name, False, save_path=r"E:\学校\快乐推荐\word2vec\saveVec")
     cluster_result5, result5 = tf_idf_w2vCluster(kkt, file_name, False, save_path=r"E:\学校\快乐推荐\word2vec\api_saveVec")
     cluster_result6, result6 = btmCluster(kkt, file_name, model_file)
+    cluster_result7, result7 = gpu_dmmCluster(kkt, file_name, "gpudmm_pdz.txt")
 
-    accuracy_result = [result1, result2, result3, result4, result5, result6]
-    cp.paintClusterResult(accuracy_result, label)
+    accuracy_result = [result1, result2, result3, result4, result5, result6, result7]
+    cp.paintClusterResult(accuracy_result, label, under_label)

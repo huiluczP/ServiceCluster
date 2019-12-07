@@ -53,9 +53,9 @@ def divide(doc):
     return words
 
 
-def get_doc_after_divide(doc):
+def get_doc_after_divide(doc, num=5):
     # 获取完整处理后的语料信息，返回为dictionary
-    # doc为为文档字典，未分词
+    # doc为为文档字典，未分词, num为对应的低频词频率
     dic = {}
     word_list = []
     whole_dic = []
@@ -67,7 +67,7 @@ def get_doc_after_divide(doc):
         whole_dic += words
 
     # 计算词频，建立低词频list
-    low_word = cal_low_fre_word(whole_dic)
+    low_word = cal_low_fre_word(whole_dic, num)
 
     # 去除
     t = 0
@@ -78,6 +78,9 @@ def get_doc_after_divide(doc):
             if w not in low_word:
                 document += w
                 document += " "
+        # 如果全为低频词，保留两个词以免出错
+        if document == "":
+            document += words[0] + " " + words[1] + " "
         document = document[0:len(document)-1]
         dic[k] = document
         t += 1
@@ -86,7 +89,7 @@ def get_doc_after_divide(doc):
 
 
 def cal_low_fre_word(word_list, num=5):
-    # 计算语料中低频词并去除,默认为出现3次以下
+    # 计算语料中低频词并去除,默认为出现5次以下
     # word_list为语料主干化分词后的结果
     low_word = []
     word_set = set(word_list)

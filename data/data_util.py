@@ -8,7 +8,7 @@ csv中获取服务文档信息
 """
 
 
-def getDocAsWordArray(filename):
+def getDocAsWordArray(filename, fre_num=5):
     # 获取路径信息
     curPath = os.path.abspath(os.path.dirname(__file__))
     rootPath = curPath[:curPath.find("ServiceCluster\\") + len("ServiceCluster\\")]
@@ -27,7 +27,7 @@ def getDocAsWordArray(filename):
         document = dataItem[1]
         dic[name] = document
 
-    dic = word_divide.get_doc_after_divide(dic)
+    dic = word_divide.get_doc_after_divide(dic, fre_num)
     return dic
 
 
@@ -49,7 +49,7 @@ def getFormerCategory(filename):
     for dataItem in apiData:
         c_type.add(dataItem[0].strip())
     c_type = list(c_type)
-    print(c_type)
+    # print(c_type)
     for dataItem in apiData:
         former.append(c_type.index(dataItem[0].strip()))
 
