@@ -190,17 +190,22 @@ class BtmModel:
 
     def printTopic_word(self, num=5):
         # 输出每个主题中出现次数最多的词
+        t_words = []
         for i in range(self.k):
             # 计划输出概率
             b = zip(self.topic_word[i], range(len(self.topic_word[i])))  # 将对应主题的每个词和其id作为元组进行排序
             b = list(b)
             b.sort(key=sort_method, reverse=True)
             print("topic {}".format(i))
+            s_words = []
             for j in range(len(b)):
                 if j < num:
+                    s_words.append(self.id_word_dic[b[j][1]])
                     print(self.id_word_dic[b[j][1]], "概率:{}".format(b[j][0] / sum(self.topic_word[i])))
                 else:
                     break
+            t_words.append(s_words)
+        return t_words
 
     def getDoc_Topic(self):
         # 输出文档主题分布
