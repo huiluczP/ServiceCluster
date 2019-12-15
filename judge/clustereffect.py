@@ -309,7 +309,7 @@ def recall_cluster(k, result=[], former=[]):
     # 计算回归率
     r = 0
     for i in range(k):
-        right = sm_m[i][corresponding[i]] * len(temple[i]) / len(f_temple[i])
+        right = sm_m[i][corresponding[i]] * len(temple[i]) / len(f_temple[corresponding[i]])
         r += right
     r = r / k
     return r
