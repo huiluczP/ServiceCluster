@@ -207,14 +207,22 @@ def f1measureClusterResult(k, result=[], former=[]):
 
 # 按照cbq论文中准确度进行计算，将分布和对应的预先分类进行映射
 # 两个聚类结果簇数量相同，对应
+# 尝试进行聚类和原分类数量不同时的准确度计算，将数量较少的类为基准进行对应
 def precision_cluster(k, result=[], former=[]):
     """
     先将result id放入对应聚类
     将former也相同操作
     在一个list中放入former簇对应的result簇编号
     """
+    k1 = len(set(result))  # 聚类数量
+    k2 = len(set(former))  # 分类数量
+    # 取比较小的值为基准
+    small_div = k1
+    if small_div > k2:
+        small_div = k2
+
     temple = []
-    for i in range(k):
+    for i in range(k1):
         temple.append([])
     for j in range(len(result)):
         # print(j, result[j])
@@ -222,7 +230,7 @@ def precision_cluster(k, result=[], former=[]):
         temple[int(result[j])].append(j)
 
     f_temple = []
-    for i in range(k):
+    for i in range(k2):
         f_temple.append([])
     for j in range(len(former)):
         # print(j, result[j])
@@ -231,41 +239,62 @@ def precision_cluster(k, result=[], former=[]):
 
     # 计算result各簇中对应的 原簇元素数量/簇元素总数
     sm_m = []
-    for i in range(k):
+    for i in range(k1):
         s_max = []
-        for j in range(k):  # 对每个分类计算
+        for j in range(k2):
             s = 0
             for x in temple[i]:
                 if x in f_temple[j]:
-                    s += 1
+                       s += 1
             s_max.append(s / len(temple[i]))
         sm_m.append(s_max)
 
     # 将最大的sm_m提取，获取对应的簇对应
-    corresponding = [0] * k
-    used = [0] * k  # 已被占用簇
-    for i in range(k):
-        s_max = 0
-        index_max = 0
-        for j in range(k):
-            if used[j] != 1:
-                if sm_m[i][j] >= s_max:
-                    s_max = sm_m[i][j]
-                    index_max = j
-        used[index_max] = 1
-        corresponding[i] = index_max
+    corresponding = [0] * small_div
+    used = [0] * k2  # 已被占用簇
+
+    if k1 <= k2:  # 聚类数和原分类数相同或聚类数比原分类数小
+        for i in range(k1):
+            s_max = 0
+            index_max = 0
+            for j in range(k2):
+                if used[j] != 1:
+                    if sm_m[i][j] >= s_max:
+                        s_max = sm_m[i][j]
+                        index_max = j
+            used[index_max] = 1
+            corresponding[i] = index_max
+    else:  # 聚类数比原分类多,此时只能将原分类分配，某些聚类不做评价，没什么说服力
+        for i in range(small_div):
+            s_max = 0
+            index_max = 0
+            for j in range(k2):
+                if used[j] != 1:
+                    if sm_m[i][j] >= s_max:
+                        s_max = sm_m[i][j]
+                        index_max = j
+            used[index_max] = 1
+            corresponding[i] = index_max
 
     p = 0
-    for i in range(k):
+    for i in range(small_div):
         p += sm_m[i][corresponding[i]]
-    p = p / k
+    p = p / small_div
     return p
 
 
 def recall_cluster(k, result=[], former=[]):
+
+    k1 = len(set(result))  # 聚类数量
+    k2 = len(set(former))  # 分类数量
+    # 取比较小的值为基准
+    small_div = k1
+    if small_div > k2:
+        small_div = k2
+
     # 和准确率类似，最终使用smi进行相除处理
     temple = []
-    for i in range(k):
+    for i in range(k1):
         temple.append([])
     for j in range(len(result)):
         # print(j, result[j])
@@ -273,7 +302,7 @@ def recall_cluster(k, result=[], former=[]):
         temple[int(result[j])].append(j)
 
     f_temple = []
-    for i in range(k):
+    for i in range(k2):
         f_temple.append([])
     for j in range(len(former)):
         # print(j, result[j])
@@ -282,9 +311,9 @@ def recall_cluster(k, result=[], former=[]):
 
     # 计算result各簇中对应的 原簇元素数量/簇元素总数
     sm_m = []
-    for i in range(k):
+    for i in range(k1):
         s_max = []
-        for j in range(k):  # 对每个分类计算
+        for j in range(k2):  # 对每个分类计算
             s = 0
             for x in temple[i]:
                 if x in f_temple[j]:
@@ -293,25 +322,38 @@ def recall_cluster(k, result=[], former=[]):
         sm_m.append(s_max)
 
     # 将最大的sm_m提取，获取对应的簇对应
-    corresponding = [0] * k
-    used = [0] * k  # 已被占用簇
-    for i in range(k):
-        s_max = 0
-        index_max = 0
-        for j in range(k):
-            if used[j] != 1:
-                if sm_m[i][j] >= s_max:
-                    s_max = sm_m[i][j]
-                    index_max = j
-        used[index_max] = 1
-        corresponding[i] = index_max
+    corresponding = [0] * small_div
+    used = [0] * k2  # 已被占用簇
+
+    if k1 <= k2:  # 聚类数和原分类数相同或聚类数比原分类数小
+        for i in range(k1):
+            s_max = 0
+            index_max = 0
+            for j in range(k2):
+                if used[j] != 1:
+                    if sm_m[i][j] >= s_max:
+                        s_max = sm_m[i][j]
+                        index_max = j
+            used[index_max] = 1
+            corresponding[i] = index_max
+    else:  # 聚类数比原分类多,此时只能将原分类分配，某些聚类不做评价，没什么说服力
+        for i in range(small_div):
+            s_max = 0
+            index_max = 0
+            for j in range(k2):
+                if used[j] != 1:
+                    if sm_m[i][j] >= s_max:
+                        s_max = sm_m[i][j]
+                        index_max = j
+            used[index_max] = 1
+            corresponding[i] = index_max
 
     # 计算回归率
     r = 0
-    for i in range(k):
+    for i in range(small_div):
         right = sm_m[i][corresponding[i]] * len(temple[i]) / len(f_temple[corresponding[i]])
         r += right
-    r = r / k
+    r = r / small_div
     return r
 
 
@@ -325,8 +367,11 @@ if __name__ == "__main__":
     # result_t = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2]
 
     result_t = [0, 0, 1, 1, 2, 2]
-    former_t = [0, 0, 0, 1, 2, 2]
+    former_t = [0, 1, 1, 2, 3, 3]
     precision = precision_cluster(3, result_t, former_t)
     print("准确率:", precision)
     recall = recall_cluster(3, result_t, former_t)
     print("回归率:", recall)
+
+    # re = entropyClusterResult(3, [0, 0, 1, 1, 2, 2], [0, 0, 1, 1, 2, 2])
+    # print(re)
