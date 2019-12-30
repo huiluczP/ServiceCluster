@@ -9,6 +9,7 @@ import cluster.tf_idf_lda_expand_kmeans as lda_ex_ti
 import cluster.tf_idf_w2v_kmeans as w2v_ti
 import cluster.btm_kmeans as btm_kmn
 import cluster.gpu_dmm_kmeans as gd_kmn
+import cluster.lda_gibbs_kmeans as ldagkmn
 
 
 def printResult(k, result, former):
@@ -21,7 +22,7 @@ def printResult(k, result, former):
     f1 = ce.f1measure_cbq(pre, recall)
 
     print("纯度:{}, RI:{}, 熵：{}, 准确率：{}，召回率：{}, F1_measure:{}".format(pur, ri, en, pre, recall, f1))
-    result_list = [pur, ri, f1, en, pre, recall]
+    result_list = [pur, ri, en, pre, recall, f1]
     return result_list
 
 
@@ -49,6 +50,29 @@ def ldaCluster(k1, k2, filename, fre_num=5):
     return result, result_list
 
 
+def lda_gibbs_cluster(k1, k2, filename, fre_num=5, iterator=500):
+    """
+    和上面的lda方法类似
+    该方法调用使用了gibbs的lda库进行模型训练
+    返回聚类结果和准确度
+    """
+    print("lda_gibbs模型训练，kMeans聚类")
+
+    # 获取数据
+    print("开始获取数据")
+    doc = du.getDocAsWordArray(filename, fre_num)
+    # 获取标签信息
+    former = du.getFormerCategory(filename)
+
+    # k1主题分类数 k2聚类数量
+    ldagkmn.k1 = k1
+    ldagkmn.k2 = k2
+    print("lda主题数:{}, 聚类个数:{}".format(ldagkmn.k1, ldagkmn.k2))
+    result = ldagkmn.lda_kmn_result(doc, iterator=iterator)
+    result_list = printResult(ldagkmn.k2, result, former)
+    return result, result_list
+
+
 def tf_idf_ldaCluster(k1, k2, filename, num, fre_num=5):
     """
     包含四个参数
@@ -59,7 +83,7 @@ def tf_idf_ldaCluster(k1, k2, filename, num, fre_num=5):
 
     # 获取数据
     print("开始获取数据")
-    doc = du.getDocAsWordArray(filename,fre_num)
+    doc = du.getDocAsWordArray(filename, fre_num)
     # 获取标签信息
     former = du.getFormerCategory(filename)
 
@@ -69,6 +93,30 @@ def tf_idf_ldaCluster(k1, k2, filename, num, fre_num=5):
 
     print("lda主题数:{}, 聚类个数:{}".format(lda_ti.k1, lda_ti.k2))
     result = lda_ti.clusterResult(doc, num)
+
+    result_list = printResult(lda_ti.k2, result, former)
+    return result, result_list
+
+
+def tf_idf_lda_gibbs_Cluster(k1, k2, filename, num, fre_num=5, iterator=500):
+    """
+    和上面差不多
+    lda用的gibbs采样
+    """
+    print("tf_idf预处理, lda_gibbs模型训练，kMeans聚类")
+
+    # 获取数据
+    print("开始获取数据")
+    doc = du.getDocAsWordArray(filename, fre_num)
+    # 获取标签信息
+    former = du.getFormerCategory(filename)
+
+    # k1主题分类数 k2聚类数量
+    lda_ti.k1 = k1
+    lda_ti.k2 = k2
+
+    print("lda主题数:{}, 聚类个数:{}".format(lda_ti.k1, lda_ti.k2))
+    result = lda_ti.clusterResult_gibbs(doc, num, iterator=iterator)
 
     result_list = printResult(lda_ti.k2, result, former)
     return result, result_list
@@ -94,6 +142,31 @@ def tf_idf_expand_lda(k1, k2, filename, num, sim_num, fre_num=5):
     lda_ex_ti.k2 = k2
     print("lda主题数:{}, 聚类个数:{}".format(lda_ex_ti.k1, lda_ex_ti.k2))
     result = lda_ex_ti.clusterResult(doc, num, sim_num)
+
+    result_list = printResult(lda_ex_ti.k2, result, former)
+    return result, result_list
+
+
+def tf_idf_expand_lda_gibbs(k1, k2, filename, num, sim_num, fre_num=5, iterator=500):
+    """
+    和上面差不多
+    lda用的gibbs采样
+    """
+    # 利用tf_idf进行扩容后lda训练
+    print("tf_idf扩容预处理, lda_gibbs模型训练，kMeans聚类")
+
+    # 获取数据
+    print("开始获取数据")
+    doc = du.getDocAsWordArray(filename, fre_num)
+    # 获取标签信息
+    former = du.getFormerCategory(filename)
+
+    # k1主题分类数 k2聚类数量
+    lda_ex_ti.k1 = k1
+    lda_ex_ti.k2 = k2
+    print("lda主题数:{}, 聚类个数:{}".format(lda_ex_ti.k1, lda_ex_ti.k2))
+    # gibbs方法
+    result = lda_ex_ti.clusterResult_gibbs(doc, num, sim_num, iterator=iterator)
 
     result_list = printResult(lda_ex_ti.k2, result, former)
     return result, result_list
@@ -164,18 +237,4 @@ def gpu_dmmCluster(k, filename, save_file, fre_num=5):
 if __name__ == "__main__":
     topic = 10
     kkt = 10
-    file_name = "原始text5.csv"
-    label = ["lda", "tf_idf_keyword_lda", "tf_idf_expand_lda", "w2v_text8", "w2v_api", "btm"]
-    under_label = ["purity", "RI", "entropy", "precision", "recall", "F1"]
-    model_file = "btm_result_text5.txt"  # btm结果文件
-
-    cluster_result1, result1 = ldaCluster(topic, kkt, file_name)
-    cluster_result2, result2 = tf_idf_ldaCluster(topic, kkt, file_name, 5)
-    cluster_result3, result3 = tf_idf_expand_lda(topic, kkt, file_name, 5, 3)
-    cluster_result4, result4 = tf_idf_w2vCluster(kkt, file_name, False, save_path=r"E:\学校\快乐推荐\word2vec\saveVec")
-    cluster_result5, result5 = tf_idf_w2vCluster(kkt, file_name, False, save_path=r"E:\学校\快乐推荐\word2vec\api_saveVec")
-    cluster_result6, result6 = btmCluster(kkt, file_name, model_file)
-    cluster_result7, result7 = gpu_dmmCluster(kkt, file_name, "gpudmm_pdz.txt")
-
-    accuracy_result = [result1, result2, result3, result4, result5, result6, result7]
-    cp.paintClusterResult(accuracy_result, label, under_label)
+    file_name = "text7.csv"
