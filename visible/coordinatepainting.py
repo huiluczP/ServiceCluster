@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 color = ["om", "og", "or", "oy", "ok", "ob", "oc", "*m", "*g", "*r"]
-text_color = ["purple", "green", "red", "yellow", "black", "blue"]
+text_color = ["purple", "green", "red", "goldenrod", "black", "blue", "sienna", "navy", "violet", "grey"]
 line_color = ["m-", "g-", "r-", "y-", "k-", "b-", "c-"]
 
 
@@ -76,7 +76,7 @@ def printClusterByPointInD2(data, label, result, title, num=5):
                     'size': f_size + 2
                 }
                 n_count[result[t]] += 1
-                plt.plot(p[0] * f_size, p[1] * f_size, color[result[t] % len(color)], ms=5)
+                plt.plot(p[0] * f_size, p[1] * f_size, color=color[result[t] % len(color)], ms=5)
                 plt.text(p[0] * f_size, p[1] * f_size, label[t], fontdict=font)
                 t += 1
         else:
@@ -100,7 +100,7 @@ def printTopicWordByPointInD2(word_vec, word, result, title, num=5):
     同时输出word_text
     """
     t = 0
-    f_size = 16
+    f_size = 13
     n_count = [0] * len(set(result))  # 计算每个类显示数量
     for vec in word_vec:
         if n_count[result[t]] >= num:
@@ -113,7 +113,7 @@ def printTopicWordByPointInD2(word_vec, word, result, title, num=5):
                 'size': f_size
             }
             n_count[result[t]] += 1
-            plt.plot(vec[0], vec[1], color[result[t] % len(color)], ms=5)
+            plt.plot(vec[0], vec[1], text_color[result[t] % len(text_color)], ms=5, marker="o")
             plt.text(vec[0], vec[1], word[t], fontdict=font)
             t += 1
 
